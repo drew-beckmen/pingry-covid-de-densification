@@ -17,6 +17,10 @@ GEM
     concurrent-ruby (1.1.6)
     domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
+    gruff (0.10.0)
+      histogram
+      rmagick
+    histogram (0.2.4.1)
     http-accept (1.7.0)
     http-cookie (1.0.3)
       domain_name (~> 0.5)
@@ -43,6 +47,7 @@ GEM
       http-cookie (>= 1.0.2, < 2.0)
       mime-types (>= 1.16, < 4.0)
       netrc (~> 0.8)
+    rmagick (4.1.2)
     ruby2_keywords (0.0.2)
     sinatra (2.0.8.1)
       mustermann (~> 1.0)
@@ -66,10 +71,12 @@ PLATFORMS
 
 DEPENDENCIES
   activerecord (~> 5.2)
+  gruff
   pry
   rake
   require_all
   rest-client (~> 2.1)
+  rmagick (~> 4.1.2)
   sinatra-activerecord
   sqlite3
 
