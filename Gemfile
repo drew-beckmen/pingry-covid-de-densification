@@ -8,6 +8,7 @@ gem 'gruff'
 gem "pry"
 gem "require_all"
 gem 'rake'
+gem 'descriptive_statistics'
 # gem "rest-client"
 
 gem "rest-client", "~> 2.1"
