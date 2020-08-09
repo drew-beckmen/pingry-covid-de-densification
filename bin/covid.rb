@@ -6,8 +6,8 @@ require 'csv'
 
 def updated_cohorted_field(letters)
     # bool = false #true for cohort 1.5 blue day, false for cohort 1.5 white day  
-    boolB = false  
-    boolM = false   
+    boolB = false    
+    boolM = false     
     Student.all.each do |family|
         if letters.include?(family.place_in_alphabet)
             
@@ -62,7 +62,7 @@ def simulate(letters)
             reduced_class_size_hash[class_identifier] = number_students_remaining_in_class
             original_class_size_hash[class_identifier] = number_students_before_cohorting
             percent_reduction = (number_students_at_home.to_f / number_students_before_cohorting.to_f) * 100
-            if percent_reduction >= 50 || number_students_remaining_in_class <= 8 
+            if percent_reduction >= 50 || number_students_remaining_in_class <= 10 
                 counter += 1
             end 
             percent_reduction_hash[class_identifier] = percent_reduction
@@ -75,6 +75,12 @@ def simulate(letters)
 
     # --------Graph for After Cohorting ------------------------------
     g = Gruff::Histogram.new 
+    g.theme = {
+        colors: %w(purple green),
+        marker_color: 'blue',
+        background_colors: ['white', 'grey'],
+        background_direction: :top_bottom
+    }
     g.bin_width = 1
     g.spacing_factor = 0
     g.title = "Course Sizes After Cohorting"
@@ -90,6 +96,12 @@ def simulate(letters)
 
     #---------Graph for Before Cohorting-------------------------------
     b = Gruff::Histogram.new 
+    b.theme = {
+        colors: %w(purple green),
+        marker_color: 'blue',
+        background_colors: ['white', 'grey'],
+        background_direction: :top_bottom
+    }
     b.bin_width = 1
     b.spacing_factor = 0
     b.title = "Course Sizes Before Cohorting"
@@ -104,15 +116,51 @@ def simulate(letters)
     #-------------------------------------------------------------------
 
     percentage_families_remaining_in_school = Student.all.where(cohorted: false).length / Student.all.length.to_f
-    reset_students
     puts "Percentage of Families in School: #{percentage_families_remaining_in_school}"
     puts "Mean:  #{new_students_per_class_array.mean}"
     puts "Median: #{new_students_per_class_array.median}"
     puts "Variance: #{new_students_per_class_array.variance}"
     puts "Standard Dev: #{new_students_per_class_array.standard_deviation}"
-    puts "Number of Courses Reduced By 50% or Less Than or Equal To 8 People: #{counter}"
-    puts "Percentage of All Courses Reduced By 50% or Less Than 8 People: #{counter/Course.all.length.to_f}"
+    puts "Number of Courses Reduced By 50% or Less Than or Equal To 10 People: #{counter}"
+    puts "Percentage of All Courses Reduced By 50% or Less Than 10 People: #{counter/Course.all.length.to_f}"
+
+    # return a list of all the household ids being sent home
+    households_at_home = Student.all.where(cohorted: true).map{|family| family.household}
+    reset_students
+    households_at_home
 end 
+
+
+# Summary on People at School Given Household Ids at Home-----------------
+
+# Returns a hash of # of students in each grade going to school given households staying home
+def students_per_grade_cohorted(households_at_home)
+    return_hash = {}
+    Individual.all.each do |person| 
+        if !households_at_home.include?(person.household_id)
+            if return_hash[person.grade_level]
+                return_hash[person.grade_level] += 1
+            else 
+                return_hash[person.grade_level] = 1
+            end  
+        end 
+    end 
+    return_hash
+end 
+
+# Returns a hash of # of total students in each grade 
+def calculate_total_students_per_grade
+    return_hash = {}
+    Individual.all.each do |person| 
+        if return_hash[person.grade_level]
+            return_hash[person.grade_level] += 1
+        else 
+            return_hash[person.grade_level] = 1
+        end 
+    end 
+    return_hash 
+end
+#--------------------------------------------------------------------------
 
 # Candidates for Cohorting--------------------------------------
 
@@ -122,8 +170,14 @@ end
 # Cohort 2 (A-M): [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] AND [14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26]
     # Cohort 2.5 [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] (true) AND [3, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26] (false)
 
-letters = [3, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26]
-puts simulate(letters)
+# letters = [3, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26]
+# households_staying_home = simulate(letters)
+# students_per_grade_remaining = students_per_grade_cohorted(households_staying_home)
+# totals_per_grade = calculate_total_students_per_grade
+# pp students_per_grade_remaining
+# percentage_by_grade = students_per_grade_remaining.map {|k, v| v.to_f/totals_per_grade[k] }
+# pp percentage_by_grade
+# puts "Number of Students in School: #{students_per_grade_remaining.values.sum}. Percentage:  #{students_per_grade_remaining.values.sum.to_f / Individual.all.length}"
 
 #-----------------------------------------------------------------
 
@@ -140,4 +194,12 @@ def check_last_name_frequency
     frequency.sort_by{|k, v| v}
 end 
 
-# pp check_last_name_frequency
+arr_frequencies = check_last_name_frequency
+conversions = {1 =>  "A", 2 =>  "B", 3 =>  "C", 4 =>  "D", 5 =>  "E", 6 =>  "F", 7 =>  "G", 8 =>  "H", 9 =>  "I", 10 =>  "J", 11 =>  "K", 12 =>  "L", 13 =>  "M", 14 =>  "N", 15 =>  "O", 16 =>  "P", 17 =>  "Q", 18 =>  "R", 19 =>  "S", 20 =>  "T", 21 =>  "U", 22 =>  "V", 23 =>  "W", 24 =>  "X", 25 =>  "Y", 26 =>  "Z"}
+arr_frequencies = arr_frequencies.map{|pair| [conversions[pair[0]], pair[1]]}
+# pp arr_frequencies.reduce(0) {|acc, pair| acc + pair[1]}
+CSV.open('frequency.csv', "w") do |csv|
+    arr_frequencies.each do |row|
+        csv << row 
+    end 
+end 
